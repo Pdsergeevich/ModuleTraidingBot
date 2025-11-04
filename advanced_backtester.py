@@ -659,12 +659,45 @@ class ManualBacktester:
 
 # Пример использования
 async def example_manual_backtest():
-    """Пример ручного бэктестинга"""
+    """Пример ручного бэктестинга с выбором инструмента"""
+    
+    from pathlib import Path
+    
+    data_dir = Path("data/candles")
+    
+    # Получаем список доступных файлов
+    csv_files = sorted(list(data_dir.glob("*.csv")))
+    
+    if not csv_files:
+        logger.error("❌ Нет CSV файлов в папке data/candles/")
+        logger.info("💡 Сначала скачайте данные через меню '1. Скачать данные'")
+        return
+    
+    # Показываем доступные файлы
+    print("\n📂 Доступные инструменты:")
+    for i, file in enumerate(csv_files, 1):
+        print(f"   {i}. {file.stem}")
+    
+    # Даем возможность выбрать
+    choice = input("\nВыберите инструмент (номер) или Enter для первого: ").strip()
+    
+    if choice:
+        try:
+            selected_file = csv_files[int(choice) - 1]
+        except (ValueError, IndexError):
+            print("❌ Неверный выбор! Используем первый файл...")
+            selected_file = csv_files[0]
+    else:
+        selected_file = csv_files[0]
+    
+    ticker = selected_file.stem
+    
+    logger.info(f"\n📊 Запуск бэктестинга для {ticker}")
     
     backtester = ManualBacktester(initial_capital=100000)
     
     # Загружаем данные
-    candles_df = backtester.load_candles('data/candles/SBER.csv')
+    candles_df = backtester.load_candles(str(selected_file))
     
     if candles_df.empty:
         logger.error("❌ Нет данных для бэктестинга")
@@ -702,9 +735,9 @@ async def example_manual_backtest():
     results = await backtester.run_manual_backtest(
         candles_df=candles_df,
         signals=signals,
-        #ticker='IMOEXF'
-        ticker='SBER'
+        ticker=ticker  # ← Используем выбранный тикер!
     )
+
 
 
 
