@@ -1,19 +1,33 @@
 # Telegram
 telethon==1.35.0
 
-# Tinkoff Invest API
-tinkoff-investments==0.2.0b90
+# Tinkoff Invest API (правильная версия!)
+tinkoff-invest==0.2.0b90  # Удалите эту строку
+# И добавьте:
+grpcio==1.60.0
+grpcio-tools==1.60.0
 
-# ИИ и анализ
+# ИИ
 openai>=1.0.0
 anthropic>=0.7.0
+requests>=2.31.0
 
-# Утилиты
+# Анализ данных
 pandas>=2.0.0
 numpy>=1.24.0
+ta>=0.11.0
+
+# Визуализация
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.18.0
+
+# Утилиты
 python-dotenv>=1.0.0
 aiohttp>=3.9.0
-asyncio>=3.4.3
 
 # Логирование
 colorlog>=6.7.0
+
+# Дополнительно
+scipy>=1.11.0

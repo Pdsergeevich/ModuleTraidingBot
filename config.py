@@ -1,9 +1,10 @@
 """
-Файл конфигурации торгового бота
-Стратегия с откатами, адаптивными стопами и Range Trading
+Файл конфигурации торгового бота v2.1
+Добавлены настройки времени торговли и обработки ошибок
 """
 
 import os
+from datetime import time as dt_time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,105 +27,124 @@ class Config:
     
     # ============= TINKOFF INVEST НАСТРОЙКИ =============
     TINKOFF_TOKEN = os.getenv('TINKOFF_TOKEN')
-    TINKOFF_ACCOUNT_ID = os.getenv('TINKOFF_ACCOUNT_ID')
+    TINKOFF_ACCOUNT_ID = os.getenv('TINKOFF_ACCOUNT_ID', None)
     SANDBOX_MODE = True
     
+    # ============= ТОРГОВОЕ ВРЕМЯ =============
+    # Время начала торговой сессии (МСК)
+    TRADING_SESSION_START = dt_time(10, 0)  # 10:00
+    
+    # Время окончания торговой сессии (МСК)
+    TRADING_SESSION_END = dt_time(23, 30)  # 23:30
+    
+    # Время принудительного закрытия всех позиций (МСК)
+    # Позиции НЕ переносятся через ночь!
+    FORCE_CLOSE_TIME = dt_time(23, 0)  # 23:00
+    
+    # Запрещать открытие новых позиций за N минут до закрытия
+    NO_NEW_POSITIONS_BEFORE_CLOSE_MINUTES = 60  # За 1 час
+    
+    # Торговля по дням недели (0=Пн, 6=Вс)
+    TRADING_DAYS = [0, 1, 2, 3, 4]  # Пн-Пт, без выходных
+    
     # ============= ИИ НАСТРОЙКИ =============
-    AI_PROVIDER = 'openai'
+    AI_PROVIDER = 'local'  # 'openai', 'anthropic', 'local'
+    
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     OPENAI_MODEL = 'gpt-4-turbo-preview'
     
     ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
     ANTHROPIC_MODEL = 'claude-3-sonnet-20240229'
     
-    # Минимальная уверенность ИИ для рассмотрения сигнала (0-1)
+    # Локальная LLM (Ollama)
+    LOCAL_LLM_MODEL = 'llama3.2:3b'
+    OLLAMA_URL = 'http://localhost:11434'
+    
     MIN_AI_CONFIDENCE = 0.65
     
     # ============= СТРАТЕГИЯ ОТКАТОВ =============
-    # Уровни Фибоначчи для входа на откатах
-    FIBONACCI_ENTRY_LEVELS = [0.382, 0.5, 0.618]  # 38.2%, 50%, 61.8%
-    
-    # Максимальное время ожидания отката (в секундах)
-    PULLBACK_TIMEOUT = 300  # 5 минут
-    
-    # Минимальное движение для определения тренда (в процентах)
+    FIBONACCI_ENTRY_LEVELS = [0.382, 0.5, 0.618]
+    PULLBACK_TIMEOUT = 300
     MIN_TREND_MOVEMENT = 0.5
-    
-    # Допустимое отклонение от уровня Фибоначчи (в процентах)
     FIBONACCI_TOLERANCE = 0.3
     
-    # ============= АДАПТИВНЫЕ СТОПЫ НА ОСНОВЕ ATR =============
-    # Период для расчета ATR (количество свечей)
+    # ============= АДАПТИВНЫЕ СТОПЫ (ATR) =============
     ATR_PERIOD = 14
-    
-    # Мультипликатор ATR для stop-loss
     ATR_STOP_MULTIPLIER = 2.0
-    
-    # Мультипликатор ATR для take-profit
     ATR_TAKE_MULTIPLIER = 3.0
-    
-    # Минимальный stop-loss в процентах (страховка)
     MIN_STOP_LOSS_PERCENT = 1.0
-    
-    # Максимальный stop-loss в процентах (страховка)
     MAX_STOP_LOSS_PERCENT = 5.0
     
-    # ============= RANGE TRADING (НЕЙТРАЛЬНЫЙ КОНТЕКСТ) =============
-    # Включить ли торговлю в диапазоне при нейтральном контексте
+    # ============= RANGE TRADING =============
     ENABLE_RANGE_TRADING = True
-    
-    # Минимальная ширина диапазона для торговли (в процентах)
     MIN_RANGE_WIDTH_PERCENT = 2.0
-    
-    # Максимальная ширина диапазона (в процентах)
     MAX_RANGE_WIDTH_PERCENT = 10.0
+    RANGE_ENTRY_OFFSET = 0.1
+    RANGE_STOP_PERCENT = 0.3
     
-    # Отступ от границ диапазона для входа (в процентах от ширины)
-    RANGE_ENTRY_OFFSET = 0.1  # 10% от ширины диапазона
-    
-    # Stop-loss для Range Trading (в процентах от ширины диапазона)
-    RANGE_STOP_PERCENT = 0.3  # 30% от ширины диапазона
-    
-    # ============= ВОЛАТИЛЬНОСТЬ И ИСТОРИЧЕСКИЕ ДАННЫЕ =============
-    # Период исторических данных для анализа (в днях)
+    # ============= ВОЛАТИЛЬНОСТЬ =============
     HISTORICAL_DAYS = 7
-    
-    # Интервал свечей для анализа
-    CANDLE_INTERVAL = '1min'  # 1min, 5min, 15min, 1hour, 1day
-    
-    # Минимальная волатильность для входа (в процентах)
+    CANDLE_INTERVAL = '1min'
     MIN_VOLATILITY_PERCENT = 0.5
-    
-    # Максимальная волатильность (слишком опасно торговать)
     MAX_VOLATILITY_PERCENT = 15.0
     
     # ============= ТОРГОВЫЕ ПАРАМЕТРЫ =============
-    # Максимальный размер позиции от портфеля (в процентах)
     MAX_POSITION_SIZE_PERCENT = 5
-    
-    # Максимальное количество одновременных открытых позиций
     MAX_OPEN_POSITIONS = 3
     
     # ============= РИСК-МЕНЕДЖМЕНТ =============
-    # Максимальная просадка портфеля (в процентах)
     MAX_DRAWDOWN_PERCENT = 10.0
-    
-    # Минимальный баланс для торговли (в рублях)
     MIN_BALANCE = 10000
-    
-    # Risk/Reward соотношение (минимальное)
     MIN_RISK_REWARD_RATIO = 1.5
     
+    # ============= ОБРАБОТКА ОШИБОК =============
+    # Максимальное количество попыток получения данных
+    MAX_RETRY_ATTEMPTS = 3
+    
+    # Задержка между попытками (секунды)
+    RETRY_DELAY = 5
+    
+    # Таймаут ожидания ответа от API (секунды)
+    API_TIMEOUT = 30
+    
+    # Максимальное время без обновления цены (секунды)
+    # Если цена не обновляется - закрываем позиции
+    MAX_PRICE_STALE_TIME = 60
+    
+    # Закрывать ли позиции при потере связи с рынком
+    CLOSE_ON_CONNECTION_LOSS = True
+    
+    # Уведомлять ли о критических ошибках
+    ALERT_ON_CRITICAL_ERRORS = True
+    
     # ============= БЭКТЕСТИНГ =============
-    BACKTEST_NEWS_FILE = 'historical_news.json'
-    BACKTEST_PRICES_FILE = 'historical_prices.csv'
+    BACKTEST_NEWS_FILE = 'data/historical_news.json'
+    BACKTEST_PRICES_FILE = 'data/historical_prices.csv'
     BACKTEST_INITIAL_CAPITAL = 100000
+    
+    # Директория для результатов бэктестинга
+    BACKTEST_RESULTS_DIR = 'backtest_results'
+    
+    # ============= ИНСТРУМЕНТЫ =============
+    # Предпочтительные инструменты для торговли
+    PREFERRED_INSTRUMENTS = [
+        'SBER',   # Сбербанк
+        'GAZP',   # Газпром
+        'LKOH',   # Лукойл
+        'YNDX',   # Яндекс
+        'GMKN',   # Норникель
+    ]
+    
+    # Фьючерсы на индексы (более предсказуемы для новостей)
+    ENABLE_FUTURES_TRADING = True
+    PREFERRED_FUTURES = [
+        'RTS',    # Фьючерс на индекс РТС
+        'MIX',    # Фьючерс на индекс ММВБ
+    ]
     
     # ============= ЛОГИРОВАНИЕ =============
     LOG_LEVEL = 'INFO'
     LOG_FILE = 'trading_bot.log'
-    
-    # Сохранять ли все сигналы в файл
     SAVE_SIGNALS = True
     SIGNALS_FILE = 'signals.json'
     
@@ -138,7 +158,6 @@ def validate_config():
         'TELEGRAM_API_ID',
         'TELEGRAM_API_HASH',
         'TINKOFF_TOKEN',
-        'OPENAI_API_KEY'
     ]
     
     missing_vars = []
